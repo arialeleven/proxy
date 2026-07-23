@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Auth Proxy Switcher",
+  "version": "1.0.0",
+  "description": "Sets an HTTP/HTTPS proxy and auto-supplies login:password on Proxy-Authentication (407).",
+  "permissions": [
+    "proxy",
+    "storage",
+    "webRequest",
+    "webRequestAuthProvider"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Auth Proxy Switcher"
+  }
+}
