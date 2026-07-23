@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <h3>Auth Proxy Switcher</h3>
+
+    <label>
+      <input type="checkbox" id="enabled" />
+      Enable proxy
+    </label>
+
+    <p>
+      <label>
+        Scheme:
+        <select id="scheme">
+          <option value="http">http</option>
+          <option value="https">https</option>
+        </select>
+      </label>
+    </p>
+
+    <p>
+      <label>Host: <input type="text" id="host" placeholder="proxy.example.com" /></label>
+    </p>
+
+    <p>
+      <label>Port: <input type="number" id="port" value="8080" min="1" max="65535" /></label>
+    </p>
+
+    <p>
+      <label>Login: <input type="text" id="login" autocomplete="off" /></label>
+    </p>
+
+    <p>
+      <label>Password: <input type="password" id="password" autocomplete="off" /></label>
+    </p>
+
+    <p>
+      <button id="save">Save</button>
+      <span id="status"></span>
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
