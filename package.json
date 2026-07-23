@@ -1,0 +1,10 @@
+{
+  "name": "https-auth-proxy",
+  "version": "1.0.0",
+  "description": "Simple HTTP/1.1 forward proxy with login:password (Basic) authentication",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "license": "MIT"
+}
