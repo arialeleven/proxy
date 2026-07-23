@@ -6,12 +6,18 @@
 extension
 dist
 
-# Docs and build tooling
+# Docs and build tooling (entrypoint is copied explicitly in the Dockerfile)
 README.md
-scripts
+
+# Local certificates / secrets — never bake these into the image
+certs
+*.pem
 
 # Local/editor cruft
 node_modules
 npm-debug.log
 *.log
 .DS_Store
+
+# CI
+.github

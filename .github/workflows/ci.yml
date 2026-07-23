@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: tls-auth-proxy:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test (TLS handshake + auth)
+        run: |
+          docker run -d --name proxy -p 6443:6443 \
+            -e PROXY_USERS="alice:secret" tls-auth-proxy:ci
+          # Wait for the cert to be generated and the listener to come up.
+          for i in $(seq 1 30); do
+            if docker logs proxy 2>&1 | grep -q "forward proxy listening"; then
+              break
+            fi
+            sleep 1
+          done
+          docker logs proxy
+          # Wrong creds -> the CONNECT tunnel is rejected with 407 over TLS.
+          # (curl reports the CONNECT status in %{http_connect}, not %{http_code}.)
+          code=$(curl -s -o /dev/null -w '%{http_connect}' \
+            --proxy-insecure -x https://bad:creds@localhost:6443 \
+            https://example.com || true)
+          echo "auth-failure CONNECT status: ${code}"
+          test "${code}" = "407"
+          # Correct creds -> the CONNECT tunnel is established (200).
+          ok=$(curl -s -o /dev/null -w '%{http_connect}' \
+            --proxy-insecure -x https://alice:secret@localhost:6443 \
+            https://example.com || true)
+          echo "auth-success CONNECT status: ${ok}"
+          test "${ok}" = "200"
+          docker rm -f proxy
