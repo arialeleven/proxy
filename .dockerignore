@@ -1,0 +1,17 @@
+# Version control
+.git
+.gitignore
+
+# The extension is not part of the server image
+extension
+dist
+
+# Docs and build tooling
+README.md
+scripts
+
+# Local/editor cruft
+node_modules
+npm-debug.log
+*.log
+.DS_Store
