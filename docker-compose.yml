@@ -1,13 +1,20 @@
 services:
   proxy:
     build: .
-    image: https-auth-proxy:latest
+    image: tls-auth-proxy:latest
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "6443:6443"
     environment:
       # Override the demo credentials from config.js.
       # Format: "user1:pass1,user2:pass2"
       PROXY_USERS: "alice:secret"
       PROXY_HOST: "0.0.0.0"
-      PROXY_PORT: "8080"
+      PROXY_PORT: "6443"
+      PROXY_TLS: "true"
+      # Common Name used when the entrypoint auto-generates a self-signed cert.
+      PROXY_CN: "localhost"
+    volumes:
+      # Persist auto-generated certs, or drop your own PEM files here:
+      #   ./certs/proxy-cert.pem and ./certs/proxy-key.pem
+      - ./certs:/app/certs

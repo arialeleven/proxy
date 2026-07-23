@@ -1,13 +1,14 @@
 {
-  "name": "https-auth-proxy",
-  "version": "1.0.0",
-  "description": "Simple HTTP/1.1 forward proxy with login:password (Basic) authentication",
+  "name": "tls-auth-proxy",
+  "version": "1.1.0",
+  "description": "HTTP/1.1 forward proxy with login:password (Basic) auth and TLS termination",
   "main": "proxy.js",
   "scripts": {
     "start": "node proxy.js",
+    "gen-certs": "bash scripts/generate-certs.sh",
     "build:extension": "bash scripts/build-extension.sh",
-    "docker:build": "docker build -t https-auth-proxy:latest .",
-    "docker:run": "docker run --rm -p 8080:8080 -e PROXY_USERS=alice:secret https-auth-proxy:latest"
+    "docker:build": "docker build -t tls-auth-proxy:latest .",
+    "docker:run": "docker run --rm -p 6443:6443 -e PROXY_USERS=alice:secret tls-auth-proxy:latest"
   },
   "license": "MIT"
 }

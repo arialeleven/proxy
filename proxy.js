@@ -1,24 +1,41 @@
 'use strict';
 
 /**
- * Simple HTTP/1.1 forward proxy with Basic (login:password) authentication.
+ * HTTP/1.1 forward proxy with Basic (login:password) authentication and
+ * optional TLS termination (an "HTTPS proxy").
  *
  * Supports:
  *   - Plain HTTP requests (GET/POST/... with absolute-form request targets)
  *   - HTTPS tunneling via the CONNECT method
  *   - Proxy-Authorization: Basic <base64(login:password)>
+ *   - TLS-encrypted client<->proxy connection (PROXY_TLS=true)
  *
  * Uses only Node.js built-in modules (no external dependencies).
  */
 
 const http = require('http');
+const https = require('https');
 const net = require('net');
+const fs = require('fs');
 const url = require('url');
 
 const config = require('./config');
 
 const HOST = process.env.PROXY_HOST || config.host || '0.0.0.0';
-const PORT = parseInt(process.env.PROXY_PORT || config.port || '8080', 10);
+const PORT = parseInt(process.env.PROXY_PORT || config.port || '6443', 10);
+
+/** Parse a boolean-ish env value ("1", "true", "yes", "on"). */
+function parseBool(value, fallback) {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+}
+
+const tlsConfig = config.tls || {};
+const TLS_ENABLED = parseBool(process.env.PROXY_TLS, tlsConfig.enabled !== false);
+const TLS_CERT = process.env.PROXY_TLS_CERT || tlsConfig.cert || './certs/proxy-cert.pem';
+const TLS_KEY = process.env.PROXY_TLS_KEY || tlsConfig.key || './certs/proxy-key.pem';
 
 /**
  * Build the set of allowed credentials as a Set of "login:password" strings.
@@ -105,7 +122,31 @@ function requireAuthSocket(socket) {
   socket.end();
 }
 
-const server = http.createServer();
+/** Load the TLS key/cert pair, exiting with a helpful message on failure. */
+function loadTlsOptions() {
+  const missing = [];
+  if (!fs.existsSync(TLS_CERT)) missing.push(`cert: ${TLS_CERT}`);
+  if (!fs.existsSync(TLS_KEY)) missing.push(`key: ${TLS_KEY}`);
+
+  if (missing.length > 0) {
+    console.error(
+      '[proxy] TLS is enabled but certificate files are missing:\n' +
+        missing.map((m) => `  - ${m}`).join('\n') +
+        '\n[proxy] Generate a self-signed pair with: npm run gen-certs\n' +
+        '[proxy] or point PROXY_TLS_CERT / PROXY_TLS_KEY at existing files.'
+    );
+    process.exit(1);
+  }
+
+  return {
+    cert: fs.readFileSync(TLS_CERT),
+    key: fs.readFileSync(TLS_KEY),
+  };
+}
+
+const server = TLS_ENABLED
+  ? https.createServer(loadTlsOptions())
+  : http.createServer();
 
 // ---- Plain HTTP proxying ----
 server.on('request', (clientReq, clientRes) => {
@@ -194,7 +235,21 @@ server.on('clientError', (err, socket) => {
   }
 });
 
+if (TLS_ENABLED) {
+  server.on('tlsClientError', (err) => {
+    console.error(`[proxy] TLS handshake error: ${err.message}`);
+  });
+}
+
 server.listen(PORT, HOST, () => {
-  console.log(`[proxy] HTTP/1.1 forward proxy listening on ${HOST}:${PORT}`);
+  const scheme = TLS_ENABLED ? 'https' : 'http';
+  console.log(
+    `[proxy] ${scheme.toUpperCase()} forward proxy listening on ${HOST}:${PORT}`
+  );
+  if (TLS_ENABLED) {
+    console.log(`[proxy] TLS enabled (cert: ${TLS_CERT})`);
+  } else {
+    console.log('[proxy] TLS disabled (client<->proxy traffic is unencrypted)');
+  }
   console.log(`[proxy] ${credentials.size} credential(s) loaded`);
 });
