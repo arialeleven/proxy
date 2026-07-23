@@ -12,6 +12,20 @@
 2. Включи **Developer mode** (справа сверху).
 3. Нажми **Load unpacked** и выбери папку `extension/`.
 
+## Сборка в .zip
+
+Чтобы получить архив для загрузки в Chrome Web Store или для распространения:
+
+```bash
+npm run build:extension
+# или: bash scripts/build-extension.sh
+```
+
+Скрипт возьмёт версию из `manifest.json` и создаст
+`dist/auth-proxy-switcher-<version>.zip` в корне репозитория. В архив попадают
+только рабочие файлы (`manifest.json`, `background.js`, `popup.html`, `popup.js`)
+без вложенной папки — как того ожидает Chrome.
+
 ## Использование
 
 1. Кликни по иконке расширения.

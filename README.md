@@ -18,6 +18,31 @@ node proxy.js
 
 Порт по умолчанию — `8080`.
 
+### Docker
+
+Собрать образ:
+
+```bash
+docker build -t https-auth-proxy:latest .
+# или: npm run docker:build
+```
+
+Запустить контейнер (учётные данные передаются через `PROXY_USERS`):
+
+```bash
+docker run --rm -p 8080:8080 -e PROXY_USERS="alice:secret" https-auth-proxy:latest
+# или: npm run docker:run
+```
+
+Либо через `docker compose` (правь `PROXY_USERS` в `docker-compose.yml`):
+
+```bash
+docker compose up --build
+```
+
+Образ основан на `node:22-alpine`, работает от непривилегированного пользователя
+`node` и содержит только рантайм-файлы (`proxy.js`, `config.js`, `package.json`).
+
 ## Настройка
 
 Учётные данные и параметры задаются в `config.js` либо через переменные окружения:

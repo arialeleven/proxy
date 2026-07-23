@@ -4,7 +4,10 @@
   "description": "Simple HTTP/1.1 forward proxy with login:password (Basic) authentication",
   "main": "proxy.js",
   "scripts": {
-    "start": "node proxy.js"
+    "start": "node proxy.js",
+    "build:extension": "bash scripts/build-extension.sh",
+    "docker:build": "docker build -t https-auth-proxy:latest .",
+    "docker:run": "docker run --rm -p 8080:8080 -e PROXY_USERS=alice:secret https-auth-proxy:latest"
   },
   "license": "MIT"
 }
